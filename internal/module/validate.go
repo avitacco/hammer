@@ -43,7 +43,7 @@ func (m Metadata) Validate() []ValidationResult {
 		})
 	}
 
-	validNameRe := regexp.MustCompile(`^[a-z][a-z0-9_]*$`)
+	validNameRe := regexp.MustCompile(`^[a-z][a-z0-9_]*-[a-z][a-z0-9_]*$`)
 	if !validNameRe.MatchString(m.Name) {
 		results = append(results, ValidationResult{
 			Level:   Warning,

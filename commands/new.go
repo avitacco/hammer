@@ -16,6 +16,7 @@ func init() {
 
 	// Register subcommands for `new` command.
 	newCmd.AddCommand(newModuleCmd)
+	newModuleCmd.Flags().StringP("forge-user", "u", "", "Forge username")
 	newModuleCmd.Flags().StringP("author", "a", "", "Author name")
 	newModuleCmd.Flags().StringP("license", "l", "Apache-2.0", "License type")
 	newModuleCmd.Flags().StringP("summary", "s", "", "Summary of the module")
@@ -33,27 +34,37 @@ var newModuleCmd = &cobra.Command{
 	Short: "Create a new Puppet module",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		forgeUser, _ := cmd.Flags().GetString("forge-user")
 		license, _ := cmd.Flags().GetString("license")
 		summary, _ := cmd.Flags().GetString("summary")
 		source, _ := cmd.Flags().GetString("source")
 		author, _ := cmd.Flags().GetString("author")
 		force, _ := cmd.Flags().GetBool("force")
 
+		if forgeUser == "" {
+			currentUser, err := user.Current()
+			if err != nil {
+				return err
+			}
+			forgeUser = currentUser.Username
+		}
+
 		if author == "" {
 			currentUser, err := user.Current()
 			if err != nil {
 				return err
 			}
-			author = currentUser.Username
+			author = currentUser.Name
 		}
 
 		opts := scaffold.Options{
-			Name:    args[0],
-			License: license,
-			Summary: summary,
-			Source:  source,
-			Author:  author,
-			Force:   force,
+			ForgeUser: forgeUser,
+			Name:      args[0],
+			License:   license,
+			Summary:   summary,
+			Source:    source,
+			Author:    author,
+			Force:     force,
 		}
 
 		err := runModuleInterview(&opts)
@@ -66,6 +77,7 @@ var newModuleCmd = &cobra.Command{
 }
 
 func runModuleInterview(opts *scaffold.Options) error {
+	opts.ForgeUser, _ = prompt("Forge username", opts.ForgeUser)
 	opts.Author, _ = prompt("Author name", opts.Author)
 	opts.License, _ = prompt("License type", opts.License)
 	opts.Summary, _ = prompt("Summary of the module", opts.Summary)

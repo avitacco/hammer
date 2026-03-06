@@ -11,6 +11,7 @@ import (
 )
 
 type Options struct {
+	ForgeUser string
 	Name      string
 	Author    string
 	License   string
@@ -52,7 +53,7 @@ func NewModule(opts Options) error {
 	}
 
 	// Actually render the templates and write them to the module directory
-	meta := module.NewMetadata(opts.Name, opts.Author)
+	meta := module.NewMetadata(opts.Name, opts.ForgeUser, opts.Author)
 	meta.License = opts.License
 	meta.Summary = opts.Summary
 	meta.Source = opts.Source
@@ -64,17 +65,20 @@ func NewModule(opts Options) error {
 	renderer := template.NewRenderer()
 
 	templates := map[string]string{
-		"module/manifests/init.pp": filepath.Join(moduleDir, "manifests", "init.pp"),
+		"module/manifests/init.pp":  filepath.Join(moduleDir, "manifests", "init.pp"),
+		"module/spec/class_spec.rb": filepath.Join(moduleDir, "spec", "classes", "init_spec.rb"),
 	}
 
 	data := struct {
 		ModuleName string
 		Author     string
 		License    string
+		ClassName  string
 	}{
 		ModuleName: opts.Name,
 		Author:     opts.Author,
 		License:    opts.License,
+		ClassName:  opts.Name,
 	}
 
 	for tmplName, destPath := range templates {

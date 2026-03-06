@@ -2,7 +2,9 @@ package module
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
+	"strings"
 )
 
 type Metadata struct {
@@ -35,9 +37,9 @@ type OperatingSystem struct {
 	Release []string `json:"operatingsystemrelease"`
 }
 
-func NewMetadata(name string, author string) Metadata {
+func NewMetadata(name string, forgeUser string, author string) Metadata {
 	return Metadata{
-		Name:         name,
+		Name:         fmt.Sprintf("%s-%s", name, forgeUser),
 		Version:      "0.1.0",
 		Author:       author,
 		License:      "Apache-2.0",
@@ -83,4 +85,20 @@ func (m Metadata) Write(path string) error {
 	encoder.SetEscapeHTML(false)
 	encoder.SetIndent("", "  ")
 	return encoder.Encode(m)
+}
+
+func (m Metadata) ModuleName() string {
+	parts := strings.SplitN(m.Name, "-", 2)
+	if len(parts) == 2 {
+		return parts[1]
+	}
+	return m.Name
+}
+
+func (m Metadata) ForgeUsername() string {
+	parts := strings.SplitN(m.Name, "-", 2)
+	if len(parts) == 2 {
+		return parts[0]
+	}
+	return ""
 }
