@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/avitacco/hammer/commands"
+	"github.com/avitacco/jig/commands"
 )
 
 func main() {

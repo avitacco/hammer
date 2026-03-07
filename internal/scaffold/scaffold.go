@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/avitacco/hammer/internal/module"
-	"github.com/avitacco/hammer/internal/template"
+	"github.com/avitacco/jig/internal/module"
+	"github.com/avitacco/jig/internal/template"
 )
 
 type Options struct {

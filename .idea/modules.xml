@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/hammer.iml" filepath="$PROJECT_DIR$/.idea/hammer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/jig.iml" filepath="$PROJECT_DIR$/.idea/jig.iml" />
     </modules>
   </component>
 </project>

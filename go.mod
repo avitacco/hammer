@@ -1,4 +1,4 @@
-module github.com/avitacco/hammer
+module github.com/avitacco/jig
 
 go 1.25.0
 

@@ -3,7 +3,7 @@ package commands
 import "github.com/spf13/cobra"
 
 var rootCmd = &cobra.Command{
-	Use:   "hammer",
+	Use:   "jig",
 	Short: "A tool for building and publishing Puppet modules",
 }
 

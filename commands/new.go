@@ -7,7 +7,7 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/avitacco/hammer/internal/scaffold"
+	"github.com/avitacco/jig/internal/scaffold"
 	"github.com/spf13/cobra"
 )
 
