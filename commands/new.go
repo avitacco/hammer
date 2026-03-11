@@ -17,6 +17,7 @@ func (a *App) newCmd() *cobra.Command {
 		Short: "Create new things",
 	}
 	cmd.AddCommand(a.newModuleCmd())
+	cmd.AddCommand(a.newClassCmd())
 	return cmd
 }
 
@@ -113,4 +114,20 @@ func prompt(question string, defaultVal string) (string, error) {
 		return defaultVal, nil
 	}
 	return input, nil
+}
+
+func (a *App) newClassCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "class <name>",
+		Short: "Create a new Puppet class",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			err := scaffold.NewClass(args[0])
+			if err != nil {
+				return err
+			}
+			return nil
+		},
+	}
+	return cmd
 }

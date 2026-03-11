@@ -40,7 +40,7 @@ type OperatingSystem struct {
 
 func NewMetadata(name string, forgeUser string, author string) Metadata {
 	return Metadata{
-		Name:         fmt.Sprintf("%s-%s", name, forgeUser),
+		Name:         fmt.Sprintf("%s-%s", forgeUser, name),
 		Version:      "0.1.0",
 		Author:       author,
 		License:      "Apache-2.0",

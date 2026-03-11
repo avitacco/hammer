@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/avitacco/jig/internal/module"
@@ -120,5 +121,78 @@ func NewModule(opts Options) error {
 	}
 
 	fmt.Printf("Created new module %s in %s\n", opts.Name, moduleDir)
+	return nil
+}
+
+func NewClass(name string) error {
+	// Get the cwd and check if it's a module directory (contains a metadata.json file)
+	cwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get working directory: %w", err)
+	}
+	if _, err := os.Stat(filepath.Join(cwd, "metadata.json")); err != nil {
+		return fmt.Errorf("%s is not a valid module directory", cwd)
+	}
+
+	// Read the module metadata
+	metadata, err := module.ReadMetadata(filepath.Join(cwd, "metadata.json"))
+	if err != nil {
+		return fmt.Errorf("failed to read module metadata: %w", err)
+	}
+
+	moduleName := metadata.ModuleName()
+
+	// Figure out the filename for the class
+	// Needs to handle several cases,
+	// 1. module::classname (should raise an error, don't give module name)
+	// 2. sub::module::class::names (should be converted to sub/module/class/names.pp)
+	// 3. classname (should be converted to classname.pp)
+	parts := strings.Split(name, "::")
+	if parts[0] == moduleName {
+		return fmt.Errorf("module name cannot be included in class name")
+	}
+	fileName := parts[len(parts)-1]
+	filePath := parts[:len(parts)-1]
+
+	classFile := filepath.Join(append([]string{cwd, "manifests"}, append(filePath, fileName+".pp")...)...)
+	className := fmt.Sprintf("%s::%s", moduleName, name)
+
+	specFile := filepath.Join(append([]string{cwd, "spec", "classes"}, append(filePath, fileName+"_spec.rb")...)...)
+
+	// Check if the class file already exists
+	if _, err := os.Stat(classFile); err == nil {
+		return fmt.Errorf("class %s already exists", fileName)
+	}
+
+	// Render the class and spec templates
+	renderer := template.NewRenderer()
+
+	templates := map[string]string{
+		"class/manifests/class.pp":         filepath.Join(classFile),
+		"class/spec/classes/class_spec.rb": filepath.Join(specFile),
+	}
+
+	data := struct {
+		ClassName string
+	}{
+		ClassName: className,
+	}
+
+	fmt.Printf("creating class %s...\n", className)
+
+	for tmplName, destPath := range templates {
+		rendered, err := renderer.Render(tmplName, data)
+		if err != nil {
+			return fmt.Errorf("failed to render template %s: %w", tmplName, err)
+		}
+		if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
+			return fmt.Errorf("failed to create directory for %s: %w", destPath, err)
+		}
+		if err := os.WriteFile(destPath, []byte(rendered), 0644); err != nil {
+			return fmt.Errorf("failed to write %s: %w", destPath, err)
+		}
+		fmt.Printf("  added file: %s\n", destPath)
+	}
+
 	return nil
 }
