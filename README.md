@@ -31,7 +31,7 @@ planned functionality.
 | `new`              | `test`         | 🔲 Planned |
 | `new`              | `transport`    | 🔲 Planned |
 | `--skip-interview` |                | ✅ Working  |
-| Template override  |                | 🔲 Planned |
+| Template override  |                | ✅ Working  |
 | `build`            |                | 🔲 Planned |
 | `release`          |                | 🔲 Planned |
 
@@ -80,6 +80,28 @@ jig falls back to your system username and full name.
 | `-s, --summary` | One-line module summary |
 | `-S, --source` | Source URL for the module |
 | `-f, --force` | Overwrite an existing module directory. The existing directory is backed up with a timestamp before any files are written. |
+| `-i, --skip-interview` | Skip the interactive interview and use flag values or defaults. |
+
+### `jig new class`
+
+Generates a new Puppet class manifest and its rspec-puppet spec file inside
+the current module directory.
+
+```
+jig new class <name>
+```
+
+The class name follows standard Puppet naming conventions. Namespaced names
+like `foo::bar` are supported and will generate the correct directory structure
+under `manifests/`. The module name prefix must not be included in the name.
+
+**Flags on `jig new`:**
+
+The following flag is available on all `jig new` subcommands:
+
+| Flag | Description |
+|------|-------------|
+| `-t, --template-dir` | Path to a custom template directory. See [Template Overrides](#template-overrides) below. |
 
 **Global flags:**
 
@@ -91,6 +113,68 @@ jig falls back to your system username and full name.
 **Module naming:** jig validates module names against Puppet's naming
 conventions. Violations produce a warning but do not stop scaffolding.
 
+## Template Overrides
+
+jig embeds default templates for all generated files. If you want to customise
+them, you can point jig at a directory of your own templates. Any template
+found in your custom directory takes precedence over the embedded default.
+Templates not present in your custom directory fall back to the embedded
+defaults automatically, so you only need to include the files you want to
+change.
+
+### Template directory structure
+
+Your custom template directory must mirror the structure of jig's embedded
+templates:
+
+```
+templates/
+  common/
+    gitkeep
+  module/
+    manifests/
+      init.pp
+    spec/
+      class_spec.rb
+      spec_helper.rb
+      default_facts.yml
+    Gemfile
+    Rakefile
+    README.md
+    CHANGELOG.md
+    gitignore
+    pdkignore
+    rubocop.yml
+    hiera.yaml
+  class/
+    manifests/
+      class.pp
+    spec/
+      classes/
+        class_spec.rb
+```
+
+### Configuring the template directory
+
+There are three ways to tell jig where your custom templates live, in order
+of precedence:
+
+**Command line flag:**
+```bash
+jig new --template-dir /path/to/templates module mymodule
+```
+
+**Environment variable:**
+```bash
+export JIG_TEMPLATE_DIR=/path/to/templates
+jig new module mymodule
+```
+
+**Config file** (`~/.config/jig/config.toml`):
+```toml
+template_dir = "/path/to/templates"
+```
+
 ## Configuration
 
 jig looks for a config file at `~/.config/jig/config.toml`. All fields are
@@ -101,6 +185,7 @@ forge_username = "avitacco"
 author         = "John Doe"
 license        = "Apache-2.0"
 forge_token    = "your-forge-token"
+template_dir   = "/path/to/templates"
 ```
 
 The config path can be overridden with the `--config` flag or the
@@ -131,7 +216,7 @@ a PR.
 
 ### Design notes for contributors
 
-- Templates are embedded via `go:embed`. External templates in `~/.config/jig/templates/` take precedence.
+- Templates are embedded via `go:embed`. External templates take precedence over embedded ones, with per-file fallback to embedded defaults when a custom template is not found.
 - `--force` never deletes existing files outright. It creates a timestamped backup of the target directory first.
 - Module name validation uses a `ValidationResult` type with an iota-based `Severity`. Violations at the `Warning` level do not halt execution.
 - Config is handled with [Viper](https://github.com/spf13/viper).
