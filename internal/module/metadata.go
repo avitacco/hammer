@@ -20,6 +20,7 @@ type Metadata struct {
 	Requirements    []Requirement     `json:"requirements"`
 	OperatingSystem []OperatingSystem `json:"operatingsystem_support"`
 	Tags            []string          `json:"tags"`
+	PdkVersion      string            `json:"pdk-version"`
 }
 
 type Dependency struct {
@@ -56,6 +57,7 @@ func NewMetadata(name string, forgeUser string, author string) Metadata {
 		},
 		OperatingSystem: []OperatingSystem{},
 		Tags:            []string{},
+		PdkVersion:      "3.4.0",
 	}
 }
 

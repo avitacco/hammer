@@ -65,8 +65,18 @@ func NewModule(opts Options) error {
 	renderer := template.NewRenderer()
 
 	templates := map[string]string{
-		"module/manifests/init.pp":  filepath.Join(moduleDir, "manifests", "init.pp"),
-		"module/spec/class_spec.rb": filepath.Join(moduleDir, "spec", "classes", "init_spec.rb"),
+		"module/manifests/init.pp":      filepath.Join(moduleDir, "manifests", "init.pp"),
+		"module/README.md":              filepath.Join(moduleDir, "README.md"),
+		"module/CHANGELOG.md":           filepath.Join(moduleDir, "CHANGELOG.md"),
+		"module/spec/class_spec.rb":     filepath.Join(moduleDir, "spec", "classes", "init_spec.rb"),
+		"module/Gemfile":                filepath.Join(moduleDir, "Gemfile"),
+		"module/Rakefile":               filepath.Join(moduleDir, "Rakefile"),
+		"module/gitignore":              filepath.Join(moduleDir, ".gitignore"),
+		"module/pdkignore":              filepath.Join(moduleDir, ".pdkignore"),
+		"module/rubocop.yml":            filepath.Join(moduleDir, ".rubocop.yml"),
+		"module/hiera.yaml":             filepath.Join(moduleDir, "hiera.yaml"),
+		"module/spec/spec_helper.rb":    filepath.Join(moduleDir, "spec", "spec_helper.rb"),
+		"module/spec/default_facts.yml": filepath.Join(moduleDir, "spec", "default_facts.yml"),
 	}
 
 	data := struct {
