@@ -54,6 +54,14 @@ func (a *App) newModuleCmd() *cobra.Command {
 				}
 			}
 
+			if license == "" {
+				license = a.Config.License
+			}
+
+			if license == "" {
+				license = "Apache-2.0"
+			}
+
 			opts := scaffold.Options{
 				ForgeUser: forgeUser,
 				Name:      args[0],
@@ -75,7 +83,7 @@ func (a *App) newModuleCmd() *cobra.Command {
 
 	newModuleCmd.Flags().StringP("forge-user", "u", "", "Forge username")
 	newModuleCmd.Flags().StringP("author", "a", "", "Author name")
-	newModuleCmd.Flags().StringP("license", "l", "Apache-2.0", "License type")
+	newModuleCmd.Flags().StringP("license", "l", "", "License type")
 	newModuleCmd.Flags().StringP("summary", "s", "", "Summary of the module")
 	newModuleCmd.Flags().StringP("source", "S", "", "Source URL for the module")
 	newModuleCmd.Flags().BoolP("force", "f", false, "Force creation of the module even if it already exists. Note: a backup of the existing directory will be created.")

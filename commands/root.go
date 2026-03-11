@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"os"
+
 	"github.com/avitacco/jig/internal/config"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -9,23 +11,25 @@ import (
 func Execute() error {
 	app := NewApp()
 
+	for _, arg := range os.Args {
+		if arg == "--debug" || arg == "-d" {
+			app.Logger.SetLevel(logrus.DebugLevel)
+			break
+		}
+	}
+
 	rootCmd := &cobra.Command{
 		Use:   "jig",
 		Short: "A tool for building and publishing Puppet modules",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			configPath, _ := cmd.Flags().GetString("config")
-			debug, _ := cmd.Flags().GetBool("debug")
 
-			cfg, err := config.Load(configPath)
+			cfg, err := config.Load(configPath, app.Logger)
 			if err != nil {
 				return err
 			}
 
 			app.Config = cfg
-
-			if debug {
-				app.Logger.SetLevel(logrus.DebugLevel)
-			}
 			return nil
 		},
 	}

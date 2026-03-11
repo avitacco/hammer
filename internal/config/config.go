@@ -1,10 +1,10 @@
 package config
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -15,23 +15,26 @@ type Config struct {
 	ForgeToken    string `mapstructure:"forge_token"`
 }
 
-func Load(path string) (Config, error) {
+func Load(path string, logger *logrus.Logger) (Config, error) {
 	if path == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return Config{}, err
 		}
 		path = filepath.Join(home, ".config", "jig", "config.toml")
+		logger.Debugf("config path not provided, using default path: %s", path)
 	}
 
 	viper.SetConfigFile(path)
 	viper.SetEnvPrefix("JIG")
 	viper.AutomaticEnv()
 	if err := viper.ReadInConfig(); err != nil {
-		var configFileNotFoundError viper.ConfigFileNotFoundError
-		if !errors.As(err, &configFileNotFoundError) {
+		if !os.IsNotExist(err) {
 			return Config{}, err
 		}
+		logger.Debugf("no config file found at %s, using default values", path)
+	} else {
+		logger.Debugf("loaded config from %s", path)
 	}
 
 	config := Config{}
