@@ -72,9 +72,12 @@ func (a *App) newModuleCmd() *cobra.Command {
 				Force:     force,
 			}
 
-			err := runModuleInterview(&opts)
-			if err != nil {
-				return err
+			skipInterview, _ := cmd.Flags().GetBool("skip-interview")
+			if !skipInterview {
+				err := runModuleInterview(&opts)
+				if err != nil {
+					return err
+				}
 			}
 
 			return scaffold.NewModule(opts)
@@ -87,6 +90,7 @@ func (a *App) newModuleCmd() *cobra.Command {
 	newModuleCmd.Flags().StringP("summary", "s", "", "Summary of the module")
 	newModuleCmd.Flags().StringP("source", "S", "", "Source URL for the module")
 	newModuleCmd.Flags().BoolP("force", "f", false, "Force creation of the module even if it already exists. Note: a backup of the existing directory will be created.")
+	newModuleCmd.Flags().BoolP("skip-interview", "i", false, "Skip interview questions")
 
 	return newModuleCmd
 }
