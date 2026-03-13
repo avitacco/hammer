@@ -34,7 +34,7 @@ planned functionality.
 | Template override  |                | ✅ Working  |
 | `templates`        | `dump`         | ✅ Working  |
 | `templates`        | `resolve`      | 🔲 Planned |
-| `build`            |                | 🔲 Planned |
+| `build`            |                | ✅ Working |
 | `release`          |                | 🔲 Planned |
 
 ## Installation

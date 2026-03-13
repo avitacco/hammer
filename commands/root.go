@@ -39,6 +39,7 @@ func Execute() error {
 
 	rootCmd.AddCommand(app.newCmd())
 	rootCmd.AddCommand(app.templatesCmd())
+	rootCmd.AddCommand(app.buildCmd())
 
 	return rootCmd.Execute()
 }
