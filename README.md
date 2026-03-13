@@ -23,7 +23,7 @@ planned functionality.
 |--------------------|----------------|------------|
 | `new`              | `module`       | ✅ Working  |
 | `new`              | `class`        | ✅ Working  |
-| `new`              | `defined_type` | 🔲 Planned |
+| `new`              | `defined_type` | ✅ Working  |
 | `new`              | `fact`         | 🔲 Planned |
 | `new`              | `function`     | 🔲 Planned |
 | `new`              | `provider`     | 🔲 Planned |
