@@ -119,7 +119,9 @@ func NewModule(opts Options) error {
 		if !opts.Force {
 			return fmt.Errorf("directory %s already exists, use --force to replace it", moduleDir)
 		}
-		err = BackupDir(moduleDir)
+		if err := BackupDir(moduleDir); err != nil {
+			return fmt.Errorf("failed to back up existing directory: %w", err)
+		}
 		fmt.Printf("Renamed existing directory %s\n", moduleDir)
 	}
 
@@ -200,6 +202,9 @@ func NewClass(opts ComponentOptions) error {
 		filepath.Join(append([]string{cwd, "manifests"})...),
 		".pp",
 	)
+	if err != nil {
+		return fmt.Errorf("failed to construct class file path: %w", err)
+	}
 
 	specFile, err := ConstructDestinationFilename(
 		opts.Name,
@@ -207,6 +212,9 @@ func NewClass(opts ComponentOptions) error {
 		filepath.Join(append([]string{cwd, "spec", "classes"})...),
 		"_spec.rb",
 	)
+	if err != nil {
+		return fmt.Errorf("failed to construct spec file path: %w", err)
+	}
 
 	className := fmt.Sprintf("%s::%s", moduleName, opts.Name)
 
