@@ -11,6 +11,12 @@ import (
 	"github.com/avitacco/jig/internal/template"
 )
 
+// Renderer is the interface satisfied by *template.Renderer. Declared here
+// so that RenderTemplates can be tested with a fake implementation.
+type Renderer interface {
+	Render(templateName string, data any) (string, error)
+}
+
 type Options struct {
 	ForgeUser   string
 	Name        string
@@ -26,6 +32,7 @@ type Options struct {
 type ComponentOptions struct {
 	Name        string
 	TemplateDir string
+	WorkDir     string
 }
 
 type TemplateFile struct {
@@ -33,7 +40,7 @@ type TemplateFile struct {
 	Destination string
 }
 
-func newRenderer(templateDir string) *template.Renderer {
+func newRenderer(templateDir string) Renderer {
 	if templateDir != "" {
 		return template.NewRendererWithExternalDir(templateDir)
 	}
@@ -45,17 +52,12 @@ func BackupDir(path string) error {
 	return os.Rename(path, backupName)
 }
 
-func GetMetadata() (module.Metadata, error) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return module.Metadata{}, fmt.Errorf("failed to get current working directory: %w", err)
-	}
-	if _, err := os.Stat(filepath.Join(cwd, "metadata.json")); err != nil {
-		return module.Metadata{}, fmt.Errorf("%s is not a valid module directory", cwd)
+func GetMetadata(dir string) (module.Metadata, error) {
+	if _, err := os.Stat(filepath.Join(dir, "metadata.json")); err != nil {
+		return module.Metadata{}, fmt.Errorf("%s is not a valid module directory", dir)
 	}
 
-	// Read the module metadata
-	metadata, err := module.ReadMetadata(filepath.Join(cwd, "metadata.json"))
+	metadata, err := module.ReadMetadata(filepath.Join(dir, "metadata.json"))
 	if err != nil {
 		return module.Metadata{}, fmt.Errorf("failed to read module metadata: %w", err)
 	}
@@ -76,31 +78,28 @@ func ConstructDestinationFilename(name string, moduleName string, prefix string,
 	return filepath.Join(pathParts...), nil
 }
 
-func RenderTemplates(renderer *template.Renderer, templateFiles []TemplateFile, data any, overwrite bool) error {
-	for _, template := range templateFiles {
-		// Check if the destination file already exists and if it should be overwritten.
+func RenderTemplates(renderer Renderer, templateFiles []TemplateFile, data any, overwrite bool) error {
+	for _, t := range templateFiles {
 		if !overwrite {
-			if _, err := os.Stat(template.Destination); err == nil {
-				return fmt.Errorf("file %s already exists", template.Destination)
+			if _, err := os.Stat(t.Destination); err == nil {
+				return fmt.Errorf("file %s already exists", t.Destination)
 			}
 		}
-		// Render the template and write it to the destination file.
-		rendered, err := renderer.Render(template.FileName, data)
+		rendered, err := renderer.Render(t.FileName, data)
 		if err != nil {
-			return fmt.Errorf("failed to render template %s: %w", template.FileName, err)
+			return fmt.Errorf("failed to render template %s: %w", t.FileName, err)
 		}
-		if err := os.MkdirAll(filepath.Dir(template.Destination), 0755); err != nil {
-			return fmt.Errorf("failed to create directory %s: %w", filepath.Dir(template.Destination), err)
+		if err := os.MkdirAll(filepath.Dir(t.Destination), 0755); err != nil {
+			return fmt.Errorf("failed to create directory %s: %w", filepath.Dir(t.Destination), err)
 		}
-		if err := os.WriteFile(template.Destination, []byte(rendered), 0644); err != nil {
-			return fmt.Errorf("failed to write file %s: %w", template.Destination, err)
+		if err := os.WriteFile(t.Destination, []byte(rendered), 0644); err != nil {
+			return fmt.Errorf("failed to write file %s: %w", t.Destination, err)
 		}
 	}
 	return nil
 }
 
 func NewModule(opts Options) error {
-	// Figure out the target directory
 	baseDir := opts.TargetDir
 	if baseDir == "" {
 		cwd, err := os.Getwd()
@@ -112,9 +111,6 @@ func NewModule(opts Options) error {
 
 	moduleDir := filepath.Join(baseDir, opts.Name)
 
-	// Check if the module directory already exists, if it does and the force
-	// flag is not set, return an error. If the force flag IS set, rename the
-	// existing directory before creating the new one.
 	if _, err := os.Stat(moduleDir); err == nil {
 		if !opts.Force {
 			return fmt.Errorf("directory %s already exists, use --force to replace it", moduleDir)
@@ -129,7 +125,6 @@ func NewModule(opts Options) error {
 		return fmt.Errorf("failed to create directory %s: %w", moduleDir, err)
 	}
 
-	// Actually render the templates and write them to the module directory
 	meta := module.NewMetadata(opts.Name, opts.ForgeUser, opts.Author)
 	meta.License = opts.License
 	meta.Summary = opts.Summary
@@ -183,24 +178,17 @@ func NewModule(opts Options) error {
 }
 
 func NewClass(opts ComponentOptions) error {
-	// Attempt to load the module metadata
-	metadata, err := GetMetadata()
+	metadata, err := GetMetadata(opts.WorkDir)
 	if err != nil {
 		return fmt.Errorf("failed to get metadata: %w", err)
 	}
 
 	moduleName := metadata.ModuleName()
 
-	// Construct the class and spec file paths and the class name
-	cwd, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("failed to get working directory: %w", err)
-	}
-
 	classFile, err := ConstructDestinationFilename(
 		opts.Name,
 		moduleName,
-		filepath.Join(append([]string{cwd, "manifests"})...),
+		filepath.Join(opts.WorkDir, "manifests"),
 		".pp",
 	)
 	if err != nil {
@@ -210,7 +198,7 @@ func NewClass(opts ComponentOptions) error {
 	specFile, err := ConstructDestinationFilename(
 		opts.Name,
 		moduleName,
-		filepath.Join(append([]string{cwd, "spec", "classes"})...),
+		filepath.Join(opts.WorkDir, "spec", "classes"),
 		"_spec.rb",
 	)
 	if err != nil {
@@ -219,12 +207,10 @@ func NewClass(opts ComponentOptions) error {
 
 	className := fmt.Sprintf("%s::%s", moduleName, opts.Name)
 
-	// Check if the class file already exists
 	if _, err := os.Stat(classFile); err == nil {
 		return fmt.Errorf("class %s already exists: %s", className, classFile)
 	}
 
-	// Render the class and spec templates
 	renderer := newRenderer(opts.TemplateDir)
 
 	templates := []TemplateFile{
@@ -232,16 +218,11 @@ func NewClass(opts ComponentOptions) error {
 		{FileName: "class/class_spec.rb", Destination: specFile},
 	}
 
-	data := struct {
-		Name string
-	}{
-		Name: className,
-	}
+	data := struct{ Name string }{Name: className}
 
 	fmt.Printf("creating class %s...\n", className)
 
-	err = RenderTemplates(renderer, templates, data, false)
-	if err != nil {
+	if err := RenderTemplates(renderer, templates, data, false); err != nil {
 		return fmt.Errorf("failed to render templates: %w", err)
 	}
 
@@ -249,23 +230,17 @@ func NewClass(opts ComponentOptions) error {
 }
 
 func NewDefinedType(opts ComponentOptions) error {
-	metadata, err := GetMetadata()
+	metadata, err := GetMetadata(opts.WorkDir)
 	if err != nil {
 		return fmt.Errorf("failed to get metadata: %w", err)
 	}
 
 	moduleName := metadata.ModuleName()
 
-	// Construct the defined_type and spec file paths and the defined_type name
-	cwd, err := os.Getwd()
-	if err != nil {
-		return fmt.Errorf("failed to get working directory: %w", err)
-	}
-
 	typeFile, err := ConstructDestinationFilename(
 		opts.Name,
 		moduleName,
-		filepath.Join(append([]string{cwd, "manifests"})...),
+		filepath.Join(opts.WorkDir, "manifests"),
 		".pp",
 	)
 	if err != nil {
@@ -275,7 +250,7 @@ func NewDefinedType(opts ComponentOptions) error {
 	specFile, err := ConstructDestinationFilename(
 		opts.Name,
 		moduleName,
-		filepath.Join(append([]string{cwd, "spec", "defines"})...),
+		filepath.Join(opts.WorkDir, "spec", "defines"),
 		"_spec.rb",
 	)
 	if err != nil {
@@ -284,7 +259,6 @@ func NewDefinedType(opts ComponentOptions) error {
 
 	typeName := fmt.Sprintf("%s::%s", moduleName, opts.Name)
 
-	// Check if the defined_type or test file already exists
 	if _, err := os.Stat(typeFile); err == nil {
 		return fmt.Errorf("defined_type %s already exists: %s", typeName, typeFile)
 	}
@@ -299,16 +273,11 @@ func NewDefinedType(opts ComponentOptions) error {
 		{FileName: "type/defined_type_spec.rb", Destination: specFile},
 	}
 
-	data := struct {
-		Name string
-	}{
-		Name: typeName,
-	}
+	data := struct{ Name string }{Name: typeName}
 
 	fmt.Printf("creating defined_type %s...\n", typeName)
 
-	err = RenderTemplates(renderer, templates, data, false)
-	if err != nil {
+	if err := RenderTemplates(renderer, templates, data, false); err != nil {
 		return fmt.Errorf("failed to render templates: %w", err)
 	}
 
