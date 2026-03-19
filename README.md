@@ -24,7 +24,7 @@ planned functionality.
 | `new`              | `module`       | ✅ Working  |
 | `new`              | `class`        | ✅ Working  |
 | `new`              | `defined_type` | ✅ Working  |
-| `new`              | `fact`         | 🔲 Planned |
+| `new`              | `fact`         | ✅ Working |
 | `new`              | `function`     | 🔲 Planned |
 | `new`              | `provider`     | 🔲 Planned |
 | `new`              | `task`         | 🔲 Planned |
