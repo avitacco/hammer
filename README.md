@@ -24,8 +24,8 @@ planned functionality.
 | `new`              | `module`       | ✅ Working  |
 | `new`              | `class`        | ✅ Working  |
 | `new`              | `defined_type` | ✅ Working  |
-| `new`              | `fact`         | ✅ Working |
-| `new`              | `function`     | 🔲 Planned |
+| `new`              | `fact`         | ✅ Working  |
+| `new`              | `function`     | ✅ Working  |
 | `new`              | `provider`     | 🔲 Planned |
 | `new`              | `task`         | 🔲 Planned |
 | `new`              | `test`         | 🔲 Planned |
@@ -34,7 +34,7 @@ planned functionality.
 | Template override  |                | ✅ Working  |
 | `templates`        | `dump`         | ✅ Working  |
 | `templates`        | `resolve`      | 🔲 Planned |
-| `build`            |                | ✅ Working |
+| `build`            |                | ✅ Working  |
 | `release`          |                | 🔲 Planned |
 
 ## Installation
