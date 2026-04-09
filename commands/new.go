@@ -25,6 +25,7 @@ func (a *App) newCmd() *cobra.Command {
 	cmd.AddCommand(a.newTaskCmd())
 	cmd.AddCommand(a.newProviderCmd())
 	cmd.AddCommand(a.newTransportCmd())
+	cmd.AddCommand(a.newTestCmd())
 	return cmd
 }
 
@@ -320,6 +321,34 @@ func (a *App) newTransportCmd() *cobra.Command {
 				WorkDir:     cwd,
 			}
 			return scaffold.NewTransport(opts)
+		},
+	}
+	return cmd
+}
+
+func (a *App) newTestCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "test <n>",
+		Short: "Create a new unit test for an existing class or defined type",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			templateDir, _ := cmd.InheritedFlags().GetString("template-dir")
+
+			if templateDir == "" {
+				templateDir = a.Config.TemplateDir
+			}
+
+			cwd, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("failed to get working directory: %w", err)
+			}
+
+			opts := scaffold.ComponentOptions{
+				Name:        args[0],
+				TemplateDir: templateDir,
+				WorkDir:     cwd,
+			}
+			return scaffold.NewTest(opts)
 		},
 	}
 	return cmd

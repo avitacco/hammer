@@ -28,7 +28,7 @@ planned functionality.
 | `new`              | `function`     | ✅ Working  |
 | `new`              | `provider`     | ✅ Working  |
 | `new`              | `task`         | ✅ Working  |
-| `new`              | `test`         | 🔲 Planned |
+| `new`              | `test`         | ✅ Working  |
 | `new`              | `transport`    | ✅ Working  |
 | `--skip-interview` |                | ✅ Working  |
 | Template override  |                | ✅ Working  |
@@ -160,6 +160,44 @@ Task names must start with a lowercase letter and contain only lowercase
 letters, numbers, and underscores (`[a-z][a-z0-9_]*`). The special name
 `init` is valid and maps the task to the module itself. Namespaced names
 using `::` are not valid for tasks.
+
+### `jig new test`
+
+Generates a unit test for an existing class or defined type inside the current
+module directory.
+```
+jig new test <n>
+```
+
+jig looks up the named resource by finding its manifest under `manifests/` and
+inspects the file to determine whether it contains a class or a defined type.
+The spec file is written to `spec/classes/` for classes or `spec/defines/` for
+defined types. The name follows the same conventions as `jig new class` and
+`jig new defined_type` -- namespaced names like `foo::bar` are supported, and
+the module name prefix must not be included.
+
+An error is returned if the manifest does not exist, if no matching class or
+defined type declaration is found in the file, or if a spec file for the named
+resource already exists.
+
+### `jig new test`
+
+Generates a unit test for an existing class or defined type inside the current
+module directory.
+```
+jig new test <n>
+```
+
+jig looks up the named resource by finding its manifest under `manifests/` and
+inspects the file to determine whether it contains a class or a defined type.
+The spec file is written to `spec/classes/` for classes or `spec/defines/` for
+defined types. The name follows the same conventions as `jig new class` and
+`jig new defined_type` -- namespaced names like `foo::bar` are supported, and
+the module name prefix must not be included.
+
+An error is returned if the manifest does not exist, if no matching class or
+defined type declaration is found in the file, or if a spec file for the named
+resource already exists.
 
 ### `jig new transport`
 
